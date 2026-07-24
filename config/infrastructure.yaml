@@ -1,0 +1,108 @@
+# Serega Stack Monitor configuration example.
+# Copy this file to config/infrastructure.yaml and replace the example values.
+# Do not commit private IP addresses, credentials, or tokens to a public repo.
+
+version: 1
+
+dashboard:
+  # Must match one of nodes[].id.
+  defaultNodeId: edge-vps
+
+  # Browser refresh interval. The current schema enforces a minimum of 10.
+  pollIntervalSeconds: 60
+
+nodes:
+  - id: edge-vps
+    name: Edge VPS
+    subtitle: Public gateway and reverse proxy
+    address: 203.0.113.10
+    location: Example region
+    status: healthy
+
+    # Controls the node's column in the topology view.
+    # Allowed: edge, tailscale, physical, workspace.
+    layer: edge
+
+    hardware:
+      kind: vps
+      model: Example cloud instance
+      cpu: 4 vCPU
+      memory: 8 GB
+      storage: 160 GB NVMe
+      architecture: x86_64
+      os: Debian 13
+
+    # These are fallback values shown until a live collector responds.
+    # Use null when a value is unknown.
+    metrics:
+      cpu: null
+      memory: null
+      disk: null
+      uptime: "—"
+
+  - id: home-rpi
+    name: Home Raspberry Pi
+    subtitle: Local services behind Tailscale
+    address: 192.0.2.20
+    location: Example private network
+    status: unconfigured
+    layer: tailscale
+    hardware:
+      kind: single-board-computer
+      model: Raspberry Pi 5
+      cpu: Broadcom BCM2712
+      memory: 8 GB
+      storage: 256 GB NVMe
+      architecture: aarch64
+      os: Debian 13
+    metrics:
+      cpu: null
+      memory: null
+      disk: null
+      uptime: "—"
+
+  - id: work-session
+    name: Work Session
+    subtitle: Ephemeral development environment
+    address: Session scoped
+    location: Cloud workspace
+    status: unconfigured
+    layer: workspace
+    hardware:
+      kind: workspace
+      model: Ephemeral cloud workspace
+      cpu: Dynamic
+      memory: Dynamic
+      storage: Ephemeral
+      architecture: x86_64
+      os: Linux
+    metrics:
+      cpu: null
+      memory: null
+      disk: null
+      uptime: Session
+
+projects:
+  - id: public-site
+    name: Public website
+    nodeId: edge-vps
+    endpoint: https://example.com
+    status: healthy
+    latencyMs: null
+    description: Public application behind the reverse proxy
+
+  - id: private-dashboard
+    name: Private dashboard
+    nodeId: home-rpi
+    endpoint: ":3000"
+    status: unconfigured
+    latencyMs: null
+    description: Tailscale-only application
+
+  - id: stack-monitor
+    name: Stack Monitor
+    nodeId: work-session
+    endpoint: Private Site
+    status: healthy
+    latencyMs: null
+    description: Infrastructure overview and health dashboard
