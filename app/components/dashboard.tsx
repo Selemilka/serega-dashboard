@@ -314,7 +314,7 @@ export default function Dashboard({
             <span className={snapshot?.ok ? "pulse live" : "pulse"} />
             <span>
               <strong>{snapshot?.ok ? "Live monitor connected" : "Connecting"}</strong>
-              <small>VPS status agent</small>
+              <small>Infrastructure status agent</small>
             </span>
           </div>
           <div className="profile">

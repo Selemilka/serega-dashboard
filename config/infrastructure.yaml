@@ -1,108 +1,129 @@
-# Serega Stack Monitor configuration example.
-# Copy this file to config/infrastructure.yaml and replace the example values.
-# Do not commit private IP addresses, credentials, or tokens to a public repo.
+# Production topology for the Serega Stack Monitor.
+# Keep private addresses, credentials, and tokens out of this public repository.
 
 version: 1
 
 dashboard:
-  # Must match one of nodes[].id.
-  defaultNodeId: edge-vps
-
-  # Browser refresh interval. The current schema enforces a minimum of 10.
+  defaultNodeId: vm26830
   pollIntervalSeconds: 60
 
 nodes:
-  - id: edge-vps
-    name: Edge VPS
-    subtitle: Public gateway and reverse proxy
-    address: 203.0.113.10
-    location: Example region
+  - id: seregapi
+    name: seregapi
+    subtitle: Raspberry Pi 5 · local workspace and service host
+    address: Local host
+    location: Home network
     status: healthy
-
-    # Controls the node's column in the topology view.
-    # Allowed: edge, tailscale, physical, workspace.
-    layer: edge
-
+    layer: physical
     hardware:
-      kind: vps
-      model: Example cloud instance
-      cpu: 4 vCPU
+      kind: single-board-computer
+      model: Raspberry Pi 5 Model B Rev 1.0
+      cpu: Broadcom BCM2712
       memory: 8 GB
-      storage: 160 GB NVMe
-      architecture: x86_64
-      os: Debian 13
-
-    # These are fallback values shown until a live collector responds.
-    # Use null when a value is unknown.
+      storage: Root disk monitored by local probe
+      architecture: aarch64
+      os: Linux
     metrics:
       cpu: null
       memory: null
       disk: null
       uptime: "—"
 
-  - id: home-rpi
-    name: Home Raspberry Pi
-    subtitle: Local services behind Tailscale
-    address: 192.0.2.20
-    location: Example private network
-    status: unconfigured
+  - id: marketpi
+    name: marketpi
+    subtitle: Raspberry Pi for marketplace automation
+    address: Tailscale private network
+    location: Home network
+    status: healthy
     layer: tailscale
     hardware:
       kind: single-board-computer
-      model: Raspberry Pi 5
-      cpu: Broadcom BCM2712
+      model: Raspberry Pi for marketplace automation
+      cpu: ARM single-board computer
       memory: 8 GB
-      storage: 256 GB NVMe
+      storage: Root disk monitored by SSH probe
       architecture: aarch64
-      os: Debian 13
+      os: Linux
     metrics:
       cpu: null
       memory: null
       disk: null
       uptime: "—"
 
-  - id: work-session
-    name: Work Session
-    subtitle: Ephemeral development environment
-    address: Session scoped
-    location: Cloud workspace
-    status: unconfigured
-    layer: workspace
+  - id: vm26830
+    name: vm26830
+    subtitle: VPS reverse proxy for serega.me
+    address: 94.159.98.135
+    location: Amsterdam
+    status: healthy
+    layer: edge
     hardware:
-      kind: workspace
-      model: Ephemeral cloud workspace
-      cpu: Dynamic
-      memory: Dynamic
-      storage: Ephemeral
+      kind: vps
+      model: VPS reverse proxy
+      cpu: Virtual CPU
+      memory: 1 GB
+      storage: Root disk monitored by SSH probe
       architecture: x86_64
       os: Linux
     metrics:
       cpu: null
       memory: null
       disk: null
-      uptime: Session
+      uptime: "—"
 
 projects:
-  - id: public-site
-    name: Public website
-    nodeId: edge-vps
-    endpoint: https://example.com
+  - id: maple-local
+    name: Maple local
+    nodeId: seregapi
+    endpoint: Local health check
     status: healthy
     latencyMs: null
-    description: Public application behind the reverse proxy
+    description: Expected HTTP 200 from the local Maple health endpoint
 
-  - id: private-dashboard
-    name: Private dashboard
-    nodeId: home-rpi
-    endpoint: ":3000"
-    status: unconfigured
+  - id: maple-public-proxy
+    name: Maple public proxy
+    nodeId: seregapi
+    endpoint: Local proxy health check
+    status: offline
     latencyMs: null
-    description: Tailscale-only application
+    description: Expected HTTP 200 from the Maple public-proxy health endpoint
 
-  - id: stack-monitor
-    name: Stack Monitor
-    nodeId: work-session
-    endpoint: Private Site
+  - id: marketpi-openclaw
+    name: marketpi OpenClaw Gateway
+    nodeId: marketpi
+    endpoint: Tailscale service
     status: healthy
     latencyMs: null
-    description: Infrastructure overview and health dashboard
+    description: Expected HTTP 200 or 401 from the OpenClaw gateway
+
+  - id: dashboard-local
+    name: Dashboard local API
+    nodeId: seregapi
+    endpoint: Process self-check
+    status: healthy
+    latencyMs: null
+    description: Confirms that the dashboard API process is running
+
+  - id: serega-me
+    name: serega.me
+    nodeId: vm26830
+    endpoint: https://serega.me
+    status: healthy
+    latencyMs: null
+    description: Expected HTTP 200 from the public endpoint
+
+  - id: maple
+    name: maple.serega.me
+    nodeId: vm26830
+    endpoint: https://maple.serega.me
+    status: healthy
+    latencyMs: null
+    description: Expected HTTP 401 or 200 from the public endpoint
+
+  - id: dashboard
+    name: dashboard.serega.me
+    nodeId: vm26830
+    endpoint: https://dashboard.serega.me
+    status: healthy
+    latencyMs: null
+    description: Expected HTTP 401 or 200 from the protected public endpoint

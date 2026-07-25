@@ -1,0 +1,16 @@
+[Unit]
+Description=Serega Stack Monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/serega/codex-workspace/projects/serega-dashboard
+Environment=NODE_ENV=production
+EnvironmentFile=/home/serega/codex-workspace/projects/serega-dashboard/.env.local
+ExecStart=/usr/bin/npm run start -- --host ${DASHBOARD_HOST} --port ${DASHBOARD_PORT}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
